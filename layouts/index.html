@@ -1,0 +1,5 @@
+{{ range first 1 (sort .Site.Sections "File.Path") }}
+  {{ range first 1 (sort .Pages "File.Path") }}
+    {{ partial "redirect.html" .RelPermalink }}
+  {{ end }}
+{{ end }}
