@@ -1,0 +1,23 @@
+name: Deploy
+run-name: Deployment
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  pages: write
+
+jobs:
+  build:
+    name: Build
+    uses: ./.github/workflows/build.yaml
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
