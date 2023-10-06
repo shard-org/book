@@ -1,0 +1,21 @@
+<aside>
+  <nav>
+    {{ $path := .Path }}
+    {{ range sort .Site.Sections "Path" }}
+      <div style="margin: 8px">
+        {{ .Title }}
+        <ol style="margin: 0">
+          {{ range sort .Pages "Path" }}
+            <li style="margin: 4px">
+              {{ if eq .Path $path }}
+                <a style="color: #A0A0A0">{{ .Title }}</a>
+              {{ else }}
+                <a href="{{ .Permalink }}">{{ .Title }}</a>
+              {{ end }}
+            </li>
+          {{ end }}
+        </ol>
+      </div>
+    {{ end }}
+  </nav>
+</aside>
