@@ -1,0 +1,23 @@
+name: Close Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-and-push:
+    name: Delete and Push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Preview
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/book-preview
+          ssh-key: ${{ secrets.PREVIEW_KEY }}
+      - name: Commit and Push
+        run: |
+          git config user.name "Actions"
+          git config user.email "action@github.com"
+          git rm -r ${{ github.event.number }}
+          git commit -m "Close Preview #${{ github.event.number }}"
+          git push

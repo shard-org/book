@@ -1,0 +1,70 @@
+name: Preview
+
+on:
+  pull_request:
+
+jobs:
+  build-and-push:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - name: Install Hugo
+        run: sudo snap install hugo
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Checkout Preview
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/book-preview
+          path: preview
+          ssh-key: ${{ secrets.PREVIEW_KEY }}
+      - name: Build
+        run: |
+          rm -r preview/${{ github.event.number }} || true
+          hugo --destination="preview/${{ github.event.number }}" --baseURL="https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/" --minify
+      - name: Commit and Push
+        id: commit
+        run: |
+          cd preview
+          git config user.name "Actions"
+          git config user.email "action@github.com"
+          git add .
+          git commit -m "Preview #${{ github.event.number }}" || true
+          git push
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+  
+  comment:
+    name: Comment
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    needs: build-and-push
+    steps:
+      - name: Wait for Preview
+        uses: actions/github-script@v6
+        with:
+          script: |
+            while (true) {
+              await new Promise(resolve => setTimeout(resolve, 5000))
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: 'book-preview',
+                head_sha: '${{ needs.build-and-push.outputs.sha }}'
+              })
+              if (runs.data.workflow_runs.some((run) => run.status == 'completed' && run.conclusion == 'success'))
+                break
+              if (runs.data.workflow_runs.all((run) => run.status == 'completed'))
+                core.setFailed('Failed to deploy Preview')
+            }
+      - name: Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/'
+            })

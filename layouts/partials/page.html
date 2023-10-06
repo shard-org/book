@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>{{ .Title }}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Open Sans&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Fira Code&display=swap" rel="stylesheet" />
+  {{ with resources.Get "css/style.css" | resources.Minify }}
+    <link href="{{ .RelPermalink }}" rel="stylesheet" />
+  {{ end }}
+</head>
+<body style="margin: 0">
+  <div id="page">
+    <header>
+      <div style="flex: 1">
+        {{ with resources.Get "svg/title.svg" | resources.Minify }}
+          <img src="{{ .RelPermalink }}" style="float: left; height: 4rem" alt="Shard" />
+        {{ end }}
+      </div>
+      <div>
+        <h2 class="faded">{{ .Section }}</h2>
+      </div>
+      <div style="flex: 1">
+        {{ with resources.Get "svg/github.svg" | resources.Minify }}
+          <a href="https://github.com/shard-org/shard" target="_blank">
+            <img src="{{ .RelPermalink }}" style="float: right; width: 4rem; height: 4rem" class="nav" alt="GitHub" />
+          </a>
+        {{ end }}
+      </div>
+    </header>
+    <div id="body">
+      <aside>
+        <nav>
+          {{ $path := .Path }}
+          {{ range sort site.Sections "File.Path" }}
+            <div style="margin: 8px" class="nav">
+              {{ .Title }}
+              <ol style="margin: 0">
+                {{ range sort .Pages "File.Path" }}
+                  {{ if eq .File.Path $path }}
+                    <li style="margin: 4px" class="faded">
+                      {{ .Title }}
+                    </li>
+                  {{ else }}
+                    <li style="margin: 4px" class="nav">
+                      <a href="{{ .RelPermalink }}" class="nav">{{ .Title }}</a>
+                    </li>
+                  {{ end }}
+                {{ end }}
+              </ol>
+            </div>
+          {{ end }}
+        </nav>
+      </aside>
+      <main>
+        {{ .Content }}
+      </main>
+    </div>
+  </div>
+</body>
+</html>
