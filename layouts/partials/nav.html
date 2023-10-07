@@ -10,7 +10,7 @@
               {{ if eq .Path $path }}
                 <a style="color: #A0A0A0">{{ .Title }}</a>
               {{ else }}
-                <a href="{{ .Permalink }}">{{ .Title }}</a>
+                <a href="{{ .RelPermalink }}">{{ .Title }}</a>
               {{ end }}
             </li>
           {{ end }}

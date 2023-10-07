@@ -1,2 +1,2 @@
 baseURL = "https://shardlang.org/"
-disableKinds = ["section", "taxonomy", "RSS"]
+disableKinds = ["RSS", "taxonomy"]

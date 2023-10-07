@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="refresh" content="0; language-guide/getting-started" />
+  {{ range first 1 (sort .Site.Sections "Path") }}
+    {{ range first 1 (sort .Pages "Path") }}
+      <meta http-equiv="refresh" content="0; {{ .RelPermalink }}" />
+    {{ end }}
+  {{ end }}
 </head>
 </html>
