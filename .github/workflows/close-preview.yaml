@@ -5,8 +5,8 @@ on:
     types: [closed]
 
 jobs:
-  close:
-    name: Close Preview
+  delete-and-push:
+    name: Delete and Push
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Preview
