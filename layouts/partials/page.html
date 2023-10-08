@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>{{ .Title }}</title>
-  <link href="https://fonts.googleapis.com/css?family=Open Sans" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css?family=Fira Code" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Open Sans&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Fira Code&display=swap" rel="stylesheet" />
   {{ with resources.Get "css/style.css" | resources.Minify }}
     <link href="{{ .RelPermalink }}" rel="stylesheet" />
   {{ end }}
@@ -13,7 +14,7 @@
     <header>
       <div style="flex: 1">
         {{ with resources.Get "svg/title.svg" | resources.Minify }}
-          <img src="{{ .RelPermalink }}" style="float: left" alt="Shard" />
+          <img src="{{ .RelPermalink }}" style="float: left; height: 4rem" alt="Shard" />
         {{ end }}
       </div>
       <div>
