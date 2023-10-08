@@ -19,7 +19,8 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/book-preview
           path: preview
-          ssh-key: ${{ secrets.PREVIEW_KEY }}
+          token: ${{ secrets.PREVIEW_KEY }}
+          
       - name: Build
         run: |
           rm -r preview/${{ github.event.number }} || true
