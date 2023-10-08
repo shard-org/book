@@ -1,0 +1,49 @@
+name: Preview
+
+on:
+  pull_request:
+
+permissions:
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Hugo
+        run: sudo snap install hugo
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Checkout Preview
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/book-preview
+          path: preview
+          ssh-key: ${{ secrets.PREVIEW_KEY }}
+      - name: Build
+        run: hugo --destination="preview/${{ github.event.number }}" --baseURL="https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/" --minify
+      - name: Commit and Push
+        run: |
+          cd preview
+          git config user.name "Actions"
+          git config user.email "action@github.com"
+          git add .
+          git commit -m "Preview #${{ github.event.number }}" || true
+          git push
+      - name: Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            })
+            if (!comments.data.some((comment) => comment.user.login == 'github-actions[bot]'))
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/'
+              })
