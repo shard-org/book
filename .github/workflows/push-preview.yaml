@@ -31,16 +31,20 @@ jobs:
               run_id: context.payload.workflow_run.id
             })
             const artifact = artifacts.data.artifacts[0]
-            const data = await github.rest.actions.downloadArtifact({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              artifact_id: artifact.id,
-              archive_format: 'zip'
-            })
-            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/preview.zip', Buffer.from(data.data))
-            core.setOutput('number', artifact.name)
+            if (/^[1-9][0-9]*$/.test(artifact.name)) {
+              const data = await github.rest.actions.downloadArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+                archive_format: 'zip'
+              })
+              require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/preview.zip', Buffer.from(data.data))
+              core.setOutput('number', artifact.name)
+            } else {
+              core.setFailed('Invalid artifact name')
+            }
       - name: Delete Existing Preview
-        run: rm -rf ${{ steps.download.outputs.number }} || true
+        run: rm -r ${{ steps.download.outputs.number }} || true
       - name: Extract Preview
         run: |
           mkdir ${{ steps.download.outputs.number }}
@@ -85,6 +89,6 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ steps.download.outputs.number }},
-              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ steps.download.outputs.number }}/'
+              issue_number: ${{ needs.push.outputs.number }},
+              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ needs.push.outputs.number }}/'
             })

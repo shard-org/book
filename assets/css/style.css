@@ -3,6 +3,7 @@
   --side-color:   #312828;
   --main-color:   #24201d;
   --code-color:   #110f0f;
+  --quote-color:  #6f5045;
   --faded-color:  #9e8f8f;
   --nav-color:    #ececd5;
 }
@@ -64,9 +65,17 @@ pre {
   border-radius: 0.5rem;
   padding: 0.5rem;
   width: 60em;
-  background-color: var(--code-color);
+  background: var(--code-color);
 }
 
 code {
   font-family: "Fira Code";
+}
+
+blockquote {
+  margin: 1em;
+  border-radius: 0.5rem;
+  padding: 0 0.5rem;
+  overflow: hidden;
+  background: var(--quote-color);
 }
