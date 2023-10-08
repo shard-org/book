@@ -1,5 +1,5 @@
 name: Close Preview
-run-name: Close Preview #${{ github.event.number }}
+run-name: "Close Preview #${{ github.event.number }}"
 
 on:
   pull_request_target:

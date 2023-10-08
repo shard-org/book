@@ -1,5 +1,5 @@
 name: Build Preview
-run-name: Build Preview #${{ github.event.number }}
+run-name: "Build Preview #${{ github.event.number }}"
 
 on:
   pull_request:
@@ -18,5 +18,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: preview
+          name: ${{ github.event.number }}
           path: public

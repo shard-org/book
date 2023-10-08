@@ -1,5 +1,5 @@
 name: Push Preview
-run-name: Push Preview #${{ github.event.number }}
+run-name: "Push Preview"
 
 on:
   workflow_run:
@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
+      number: ${{ steps.download.outputs.number }}
       sha: ${{ steps.commit.outputs.sha }}
     steps:
       - name: Checkout
@@ -19,36 +20,38 @@ jobs:
         with:
           repository: ${{ github.repository_owner }}/book-preview
           ssh-key: ${{ secrets.PREVIEW_KEY }}
-      - name: Remove Existing Preview
-        run: rm -r ${{ github.event.number }} || true
       - name: Download Preview
+        id: download
         uses: actions/github-script@v6
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id,
-              name: 'preview'
+              run_id: context.payload.workflow_run.id
             })
-            const artifact = await github.rest.actions.downloadArtifact({
+            const artifact = artifacts.data.artifacts[0]
+            const data = await github.rest.actions.downloadArtifact({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              artifact_id: artifacts.data.artifacts[0].id,
+              artifact_id: artifact.id,
               archive_format: 'zip'
             })
-            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/preview.zip', Buffer.from(artifact.data))
+            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/' + artifact.name + '.zip', Buffer.from(data))
+            core.setOutput('number', artifact.name)
+      - name: Delete Existing Preview
+        run: rm -rf ${{ steps.download.outputs.number }} || true
       - name: Extract Preview
         run: |
-          unzip preview.zip
-          tar -xf preview.tar -C ${{ github.event.number }}
+          unzip ${{ steps.download.outputs.number }}.zip
+          tar -xf ${{ steps.download.outputs.number }}.tar -C ${{ steps.download.outputs.number }}
       - name: Commit and Push
         id: commit
         run: |
           git config user.name "Actions"
           git config user.email "action@github.com"
-          git add ${{ github.event.number }}
-          git commit -m "Preview #${{ github.event.number }}" || true
+          git add ${{ steps.download.outputs.number }}
+          git commit -m "Preview #${{ steps.download.outputs.number }}" || true
           git push
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
@@ -82,6 +85,6 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/'
+              issue_number: ${{ steps.download.outputs.number }},
+              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ steps.download.outputs.number }}/'
             })
