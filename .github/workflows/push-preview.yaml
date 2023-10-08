@@ -37,14 +37,14 @@ jobs:
               artifact_id: artifact.id,
               archive_format: 'zip'
             })
-            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/' + artifact.name + '.zip', Buffer.from(data.data))
+            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/preview.zip', Buffer.from(data.data))
             core.setOutput('number', artifact.name)
       - name: Delete Existing Preview
         run: rm -rf ${{ steps.download.outputs.number }} || true
       - name: Extract Preview
         run: |
-          unzip ${{ steps.download.outputs.number }}.zip
-          tar -xf ${{ steps.download.outputs.number }}.tar -C ${{ steps.download.outputs.number }}
+          mkdir ${{ steps.download.outputs.number }}
+          unzip preview.zip -d ${{ steps.download.outputs.number }}
       - name: Commit and Push
         id: commit
         run: |
