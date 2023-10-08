@@ -1,18 +1,1 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Shard - Page Not Found</title>
-  {{ partial "style.html" }}
-</head>
-<body style="margin: 0">
-  <div id="page">
-    {{ partial "header.html" }}
-    <div id="body">
-      {{ partial "nav.html" . }}
-      <main>
-        <h1>Page Not Found</h1>
-      </main>
-    </div>
-  </div>
-</body>
-</html>
+{{ partial "page.html" (dict "Title" "Page Not Found" "Content" ("<h1>Page Not Found</h1>" | safeHTML)) }}
