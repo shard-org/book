@@ -85,6 +85,6 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: ${{ steps.download.outputs.number }},
-              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ steps.download.outputs.number }}/'
+              issue_number: ${{ needs.push.outputs.number }},
+              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ needs.push.outputs.number }}/'
             })
