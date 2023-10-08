@@ -1,47 +1,64 @@
-name: Preview
+name: Push Preview
+run-name: Push Preview #${{ github.event.number }}
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["Build Preview"]
+    types: [completed]
 
 jobs:
-  build-and-push:
-    name: Build and Push
+  push:
+    name: Push
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
       sha: ${{ steps.commit.outputs.sha }}
     steps:
-      - name: Install Hugo
-        run: sudo snap install hugo
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Checkout Preview
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ github.repository_owner }}/book-preview
-          path: preview
           ssh-key: ${{ secrets.PREVIEW_KEY }}
-      - name: Build
+      - name: Remove Existing Preview
+        run: rm -r ${{ github.event.number }} || true
+      - name: Download Preview
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+              name: 'preview'
+            })
+            const artifact = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: artifacts.data[0].id,
+              archive_format: 'zip'
+            })
+            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/preview.zip', Buffer.from(artifact.data))
+      - name: Extract Preview
         run: |
-          rm -r preview/${{ github.event.number }} || true
-          hugo --destination="preview/${{ github.event.number }}" --baseURL="https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/" --minify
+          unzip preview.zip
+          tar -xf preview.tar -C ${{ github.event.number }}
       - name: Commit and Push
         id: commit
         run: |
-          cd preview
           git config user.name "Actions"
           git config user.email "action@github.com"
-          git add .
+          git add ${{ github.event.number }}
           git commit -m "Preview #${{ github.event.number }}" || true
           git push
           echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-  
+
   comment:
     name: Comment
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-    needs: build-and-push
-    steps:
+    needs: push
+    steps: 
       - name: Wait for Preview
         uses: actions/github-script@v6
         with:
@@ -51,7 +68,7 @@ jobs:
               const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
                 repo: 'book-preview',
-                head_sha: '${{ needs.build-and-push.outputs.sha }}'
+                head_sha: '${{ needs.push.outputs.sha }}'
               })
               if (runs.data.workflow_runs.some((run) => run.status == 'completed' && run.conclusion == 'success'))
                 break

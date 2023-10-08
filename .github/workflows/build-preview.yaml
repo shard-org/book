@@ -1,0 +1,22 @@
+name: Build Preview
+run-name: Build Preview #${{ github.event.number }}
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Hugo
+        run: sudo snap install hugo
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: hugo --baseURL="https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/" --minify
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: preview
+          path: public
