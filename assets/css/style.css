@@ -1,0 +1,72 @@
+:root {
+  --header-color: #443938;
+  --side-color:   #312828;
+  --main-color:   #24201d;
+  --code-color:   #110f0f;
+  --faded-color:  #927f7f;
+  --nav-color:    #ececd5;
+}
+
+.faded {
+  color: var(--faded-color);
+}
+
+.nav {
+  color: var(--nav-color);
+}
+
+* {
+  color: white;
+  font-family: "Open Sans";
+}
+
+#page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  padding: 1rem;
+  background: var(--header-color);
+  display: flex;
+  align-items: center;
+}
+
+header * {
+  margin: 0;
+  font-size: xxx-large;
+  font-weight: normal;
+}
+
+#body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+aside {
+  width: 20em;
+  padding: 0.5rem;
+  overflow-y: auto;
+  background: var(--side-color);
+}
+
+main {
+  flex: 1;
+  padding: 0 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--main-color);
+}
+
+pre {
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  width: 60em;
+  background-color: var(--code-color);
+}
+
+code {
+  font-family: "Fira Code";
+}
