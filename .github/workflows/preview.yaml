@@ -7,8 +7,6 @@ jobs:
   build-and-push:
     name: Build and Push
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
     steps:
       - name: Install Hugo
         run: sudo snap install hugo
@@ -21,8 +19,11 @@ jobs:
           path: preview
           ssh-key: ${{ secrets.PREVIEW_KEY }}
       - name: Build
-        run: hugo --destination="preview/${{ github.event.number }}" --baseURL="https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/" --minify
+        run: |
+          rm -r preview/${{ github.event.number }} || true
+          hugo --destination="preview/${{ github.event.number }}" --baseURL="https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/" --minify
       - name: Commit and Push
+        id: commit
         run: |
           cd preview
           git config user.name "Actions"
@@ -30,39 +31,32 @@ jobs:
           git add .
           git commit -m "Preview #${{ github.event.number }}" || true
           git push
-      - name: Query Comments
-        id: query_comments
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            })
-            core.setOutput('should_comment', !comments.data.some((comment) => comment.user.login == 'github-actions[bot]'))
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+  
+  comment:
+    name: Comment
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    needs: build-and-push
+    steps:
       - name: Wait for Preview
-        id: wait_for_preview
-        if: ${{ steps.query_comments.outputs.should_comment }}
         uses: actions/github-script@v6
         with:
           script: |
-            const runs = await github.rest.actions.listWorkflowRunsForRepo({
-              owner: context.repo.owner,
-              repo: 'book-preview'
-            })
-            let run = runs.data.workflow_runs[0]
-            while (run.status != 'completed') {
-              const response = await github.rest.actions.getWorkflowRun({
+            while (true) {
+              await new Promise(resolve => setTimeout(resolve, 5000))
+              const runs = await github.rest.actions.listWorkflowRunsForRepo({
                 owner: context.repo.owner,
                 repo: 'book-preview',
-                run_id: run.id
+                head_sha: '${{ steps.commit.outputs.sha }}'
               })
-              run = response.data
+              if (runs.data.workflow_runs.some((run) => run.status == 'completed' && run.conclusion == 'success'))
+                break
+              if (runs.data.workflow_runs.all((run) => run.status == 'completed'))
+                core.setFailed('Failed to deploy Preview')
             }
-            core.setOutput('should_comment', run.conclusion == 'success')
       - name: Comment
-        if: ${{ steps.wait_for_preview.outputs.should_comment }}
         uses: actions/github-script@v6
         with:
           script: |
