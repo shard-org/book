@@ -37,7 +37,7 @@ jobs:
               artifact_id: artifact.id,
               archive_format: 'zip'
             })
-            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/' + artifact.name + '.zip', Buffer.from(data))
+            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/' + artifact.name + '.zip', Buffer.from(data.data))
             core.setOutput('number', artifact.name)
       - name: Delete Existing Preview
         run: rm -rf ${{ steps.download.outputs.number }} || true
