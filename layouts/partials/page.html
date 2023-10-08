@@ -21,7 +21,9 @@
       </div>
       <div style="flex: 1">
         {{ with resources.Get "svg/github.svg" | resources.Minify }}
-          <img src="{{ .RelPermalink }}" style="float: right; width: 4rem; height: 4rem" class="nav" alt="GitHub" />
+          <a href="https://github.com/shard-org/shard" target="_blank">
+            <img src="{{ .RelPermalink }}" style="float: right; width: 4rem; height: 4rem" class="nav" alt="GitHub" />
+          </a>
         {{ end }}
       </div>
     </header>
