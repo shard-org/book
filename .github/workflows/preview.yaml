@@ -30,7 +30,8 @@ jobs:
           git add .
           git commit -m "Preview #${{ github.event.number }}" || true
           git push
-      - name: Comment
+      - name: Query Comments
+        id: query_comments
         uses: actions/github-script@v6
         with:
           script: |
@@ -39,10 +40,35 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number
             })
-            if (!comments.data.some((comment) => comment.user.login == 'github-actions[bot]'))
-              await github.rest.issues.createComment({
+            core.setOutput('should_comment', !comments.data.some((comment) => comment.user.login == 'github-actions[bot]'))
+      - name: Wait for Preview
+        id: wait_for_preview
+        if: ${{ steps.query_comments.outputs.should_comment }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: 'book-preview'
+            })
+            let run = runs.data.workflow_runs[0]
+            while (run.status != 'completed') {
+              const response = await github.rest.actions.getWorkflowRun({
                 owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/'
+                repo: 'book-preview',
+                run_id: run.id
               })
+              run = response.data
+            }
+            core.setOutput('should_comment', run.conclusion == 'success')
+      - name: Comment
+        if: ${{ steps.wait_for_preview.outputs.should_comment }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Preview: https://${{ github.repository_owner }}.github.io/book-preview/${{ github.event.number }}/'
+            })
