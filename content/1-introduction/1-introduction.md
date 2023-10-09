@@ -17,3 +17,5 @@ Shard is an assembly inspired programming language, focusing on:
 Let's be honest, you probably don't.
 Shard is a **small** hobby project, and is not meant to be used for anything serious.
 It's meant as a language similar to assembly, but while avoiding it's gripes, making it easier to write and read.
+
+he told me to ;-;
