@@ -13,6 +13,9 @@
   <div id="page">
     <header>
       <div style="flex: 1">
+        {{ with resources.Get "svg/shard.svg" | resources.Minify }}
+          <img src="{{ .RelPermalink }}" style="float: left; height: 4rem; margin-right: 1rem" alt="Shard Logo" />
+        {{ end }}
         {{ with resources.Get "svg/title.svg" | resources.Minify }}
           <img src="{{ .RelPermalink }}" style="float: left; height: 4rem" alt="Shard" />
         {{ end }}
